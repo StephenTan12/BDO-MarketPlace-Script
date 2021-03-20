@@ -1,53 +1,56 @@
 from pymongo import MongoClient
+from datetime import date
 from .scrapper import getItemName
+from .api import getMarketData
 import os
 import urllib
-import requests
 
-body_data = {
-  'keyType': 0,
-  'mainCategory': 35,
-  'subCategory': 4
-}
+body_data = [
+  {
+    'keyType': 0,
+    'mainCategory': 35,
+    'subCategory': 4
+  },
+  {
+    'keyType': 0,
+    'mainCategory': 25,
+    'subCategory': 3
+  }
+]
+
+categories = ['food', 'materials']
 
 def run_script():
-  
-  print('hello')
   user = os.getenv('MONGO_USER')
   password = os.getenv('MONGO_PASS')
   password = urllib.parse.quote(password)
-  client = MongoClient(f'mongodb+srv://{user}:{password}@marketdata.2lgr9.mongodb.net/food?retryWrites=true&w=majority')
 
-  response = requests.post(
-    'https://na-trade.naeu.playblackdesert.com/Trademarket/GetWorldMarketList',
-    params=body_data,
-    headers={'Content-Type': 'application/json', 'User-Agent': 'BlackDesert'},
-  )
-  res_data = response.json()
+  for (index, category) in enumerate(categories):
+    client = MongoClient(f'mongodb+srv://{user}:{password}@marketdata.2lgr9.mongodb.net/{category}?retryWrites=true&w=majority')
+    database_collection = client[category]
+    items_data = getMarketData(body_data[index])
 
-  database_food = client['food']
+    for i in items_data:
+      item = i.split('-')
+      try:
+        itemId = int(item[0])
+        currentStock = int(item[1])
+        totalTrades = int(item[2])
+        price = int(item[3])
+        date = date.today()
 
-  items_data = res_data['resultMsg'].split('|')
+        item_name = getItemName(itemId)
 
-  for i in items_data:
-    item = i.split('-')
-    try:
-      itemId = int(item[0])
-      currentStock = int(item[1])
-      totalTrades = int(item[2])
-      price = int(item[3])
+        col_item = database_collection[item_name]
 
-      item_name = getItemName(itemId)
+        document = {
+          'itemId': itemId,
+          'currentStock': currentStock,
+          'totalTrades': totalTrades,
+          'price': price,
+          'date': date
+        }
 
-      col_item = database_food[item_name]
-
-      document = {
-        'itemId': itemId,
-        'currentStock': currentStock,
-        'totalTrades': totalTrades,
-        'price': price
-      }
-
-      col_item.insert_one(document)
-    except:
-      continue
+        col_item.insert_one(document)
+      except:
+        continue

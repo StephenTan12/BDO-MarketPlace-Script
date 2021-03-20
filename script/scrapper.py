@@ -7,5 +7,6 @@ def getItemName(id):
   soup = BeautifulSoup(html_text, features="html.parser")
   job = soup.find('head')
   item_name = job.find('title').text
-  formatted_item_name = item_name[0:item_name.index('-')-1]
+  formatted_item_name = item_name[0:item_name.index('BDO Codex')-3]
+  
   return formatted_item_name
