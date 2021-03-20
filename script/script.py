@@ -1,6 +1,5 @@
 from pymongo import MongoClient
 from .scrapper import getItemName
-from data import food
 import os
 import urllib
 import requests
@@ -38,13 +37,7 @@ def run_script():
       totalTrades = int(item[2])
       price = int(item[3])
 
-      item_name = ''
-
-      if food.has_key(itemId):
-        item_name = food[itemId]
-      else:
-        item_name = getItemName(itemId)
-        food[itemId] = item_name
+      item_name = getItemName(itemId)
 
       col_item = database_food[item_name]
 
