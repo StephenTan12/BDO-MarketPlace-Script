@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-from datetime import date
+from datetime import datetime
 from .scrapper import getItemName
 from .api import getMarketData
 import os
@@ -37,7 +37,7 @@ def run_script():
         currentStock = int(item[1])
         totalTrades = int(item[2])
         price = int(item[3])
-        date = date.today()
+        date = datetime.utcnow()
 
         item_name = getItemName(itemId)
 
@@ -50,7 +50,7 @@ def run_script():
           'price': price,
           'date': date
         }
-
+        
         col_item.insert_one(document)
       except:
         continue
