@@ -1,6 +1,12 @@
 from bs4 import BeautifulSoup
 import requests
 
+'''
+Scrapper that scraps bdocodex for the item names based on id
+
+@params id - id of the item
+@returns the item name corresponding to the id
+'''
 def getItemName(id):
   url = f'https://bdocodex.com/us/item/{id}/'
   html_text = requests.get(url).text

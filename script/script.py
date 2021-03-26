@@ -20,16 +20,22 @@ body_data = [
 
 categories = ['food', 'materials']
 
+'''
+The main script that will be run. This function gets the marketplace data, scraps bdocodex for the item name,
+and saves the item in the database.
+'''
 def run_script():
   user = os.getenv('MONGO_USER')
   password = os.getenv('MONGO_PASS')
   password = urllib.parse.quote(password)
 
   for (index, category) in enumerate(categories):
+    #creating a new database with category name in the cluster
     client = MongoClient(f'mongodb+srv://{user}:{password}@marketdata.2lgr9.mongodb.net/{category}?retryWrites=true&w=majority')
     database_collection = client[category]
     items_data = getMarketData(body_data[index])
 
+    #iterating through the items_data list and saving the data to the database
     for i in items_data:
       item = i.split('-')
       try:
