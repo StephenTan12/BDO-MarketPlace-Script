@@ -13,4 +13,5 @@ This is a python script that fetches market place data from Black Desert Online.
 
 ### .env File Contents
 MONGO_USER={mongo username without the curly braces}
+<br />
 MONGO_PASS={mongo pass without the curly braces}
