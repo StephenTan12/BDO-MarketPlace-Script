@@ -1,18 +1,19 @@
 import requests
 
-'''
-Does a post request to the Black Desert Online servers to fetch market place data
+BDO_URL = "https://api.arsha.io/v2/na/GetWorldMarketSubList"
 
-@params body_data - category id of the items 
-@returns list of response data
-'''
-def getMarketData(body_data):
-  response = requests.post(
-    'https://na-trade.naeu.playblackdesert.com/Trademarket/GetWorldMarketList',
-    params=body_data,
-    headers={'Content-Type': 'application/json', 'User-Agent': 'BlackDesert'},
+def fetch_bdo_market_data(request_params: dict[str]) -> dict:
+  '''
+  Fetch market place data
+
+  @params body_data - category id of the items 
+  @returns list of response data
+  '''
+  response = requests.get(
+    url=BDO_URL,
+    params=request_params
   )
-  res_data = response.json()
-  items_data = res_data['resultMsg'].split('|')
 
-  return items_data
+  res_data = response.json()
+
+  return res_data
