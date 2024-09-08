@@ -1,60 +1,36 @@
-import datetime
+import logging
+import time
+import traceback
 
 from .update_resources import RESOURCES_ITEMS_PATH
 from .api import fetch_bdo_market_data
-
-class ItemData:
-  def __init__(
-      self, date: datetime, id: int, main_category_id: int, sub_category_id: int,
-      name: str, base_price: int, 
-      current_stock: int, total_trades: int,
-      price_min: int, price_max: int, is_patch_day: bool
-    ):
-    self.date = date
-    self.id = id
-    self.main_category_id = main_category_id
-    self.sub_category_id = sub_category_id
-    self.name = name
-    self.base_price = base_price
-    self.current_stock = current_stock
-    self.total_trades = total_trades
-    self.price_min = price_min
-    self.price_max = price_max
-    self.is_patch_day = is_patch_day
-
-  def __str__(self):
-    return f"{self.date} {self.id} {self.main_category_id} {self.sub_category_id} {self.name} \
-      {self.base_price} {self.current_stock} {self.total_trades} {self.price_min} {self.price_max} {self.is_patch_day}"
+from .models import get_item_data
+from .cloud_sql_db_conn import insert_to_database
 
 def run_script():
-  resources_items_file = open(RESOURCES_ITEMS_PATH, "r")
+    resources_items_file = open(RESOURCES_ITEMS_PATH, "r")
 
-  for line in resources_items_file:
-    (item_id, main_category_id, sub_category_id) = line.strip().split(" ")
+    start_time = time.time()
+    logging.info("Started fetching item data")
+    for line in resources_items_file:
+        (item_id, main_category_id, sub_category_id) = line.strip().split(" ")
 
-    request_params = create_request_params(item_id)
-    items_json_response = fetch_bdo_market_data(request_params)
-    
-    item_data = get_item_data(items_json_response, main_category_id, sub_category_id)
-    
-    # store to database
-    
-  resources_items_file.close()
+        logging.info("Requesting item id %s", item_id)
+        request_params = _create_request_params(item_id)
+        items_json_response = fetch_bdo_market_data(request_params)
 
-def create_request_params(item_id: str) -> dict[str]:
-  return {"id": int(item_id), "lang": "en"}
+        try:
+            logging.info("Formatting response for item id %s", item_id)
+            item_data = get_item_data(items_json_response, main_category_id, sub_category_id)
 
-def get_item_data(items_json_response: dict, main_category_id: str, sub_category_id) -> ItemData:
-  date = datetime.datetime.now().strftime("%Y-%m-%d")
-  id = items_json_response["id"]
-  name = items_json_response["name"]
-  base_price = items_json_response["basePrice"]
-  current_stock = items_json_response["currentStock"]
-  total_trades = items_json_response["totalTrades"]
-  price_min = items_json_response["priceMin"]
-  price_max = items_json_response["priceMax"]
-  is_patch_day = datetime.datetime.now().weekday() == 3 # check if Thursday
-  
-  return ItemData(date, id, main_category_id, sub_category_id, name, base_price, current_stock, total_trades, price_min, price_max, is_patch_day)
+            logging.info("Inserting item id %s into cloud sql", item_id)
+            insert_to_database(item_data)
+        except Exception as e:
+            logging.error("Error occurred at item id %s: %s", item_id, e)
+            logging.error("stack trace: %s", traceback.format_exc())
 
+    logging.info("Total time taken for request and insertion is %s seconds", (time.time() - start_time))
+    resources_items_file.close()
 
+def _create_request_params(item_id: str) -> dict[str]:
+    return {"id": int(item_id), "lang": "en"}
