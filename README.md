@@ -8,9 +8,19 @@ This is a python script that fetches market place data from Black Desert Online 
 
 ### Installation
 1) Create virtual env
+```
+python -m venv .venv
+```
 2) Create .env file
-3) Run command pip install -r "requirements.txt"
-4) Run with "python3 main.py"
-
-## TODO
-1) Setup cronjob
+3) Activate virtual env
+```
+source .venv/bin/activate
+```
+4) Install dependencies
+```
+pip install -r "requirements.txt"
+```
+5) Run script!
+```
+python main.py
+```
